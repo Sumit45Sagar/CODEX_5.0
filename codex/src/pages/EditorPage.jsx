@@ -7,12 +7,10 @@ import CodeChangeLog from "../comp/CodeChangeLog";
 import Client from "../comp/Client";
 import { initSocket } from "../socket";
 import logo from "../assets/code-logo.png";
-
 import {
   Moon,
   Sun,
   Settings,
-  Github,
   Users,
   Share2,
   Code2,
@@ -49,35 +47,7 @@ const IconButton = ({ icon: Icon, onClick, className }) => (
     <Icon className="w-5 h-5" />
   </button>
 );
-//-----------------------------------------------------------------------------------------------
-const LogWindow = ({ logs, onClose }) => (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-    <div className="bg-white text-black p-4 rounded-md w-96">
-      <h2 className="text-lg font-bold mb-4">Change Logs</h2>
-      <div className="max-h-64 overflow-y-auto">
-        {logs.length ? (
-          logs.map((log, index) => (
-            <div key={index} className="mb-2">
-              <p className="text-sm">
-                <strong>{log.username}</strong> made changes at{" "}
-                {new Date(log.timestamp).toLocaleTimeString()}
-              </p>
-              <pre className="bg-gray-100 p-2 rounded">{log.code}</pre>
-            </div>
-          ))
-        ) : (
-          <p className="text-gray-500">No logs yet.</p>
-        )}
-      </div>
-      <button
-        onClick={onClose}
-        className="mt-4 bg-red-600 text-white px-4 py-2 rounded-md"
-      >
-        Close
-      </button>
-    </div>
-  </div>
-);
+
 
 export default function EditorPage() {
   const [isDarkMode, setIsDarkMode] = useState(true);
