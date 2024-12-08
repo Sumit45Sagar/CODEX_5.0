@@ -1,5 +1,3 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable react/prop-types */
 import React, { useState, useRef, useEffect } from "react";
 import toast from "react-hot-toast";
 import axios from "axios";
@@ -9,7 +7,7 @@ import CodeChangeLog from "../comp/CodeChangeLog";
 import Client from "../comp/Client";
 import { initSocket } from "../socket";
 import logo from "../assets/code-logo.png";
-import axios from "axios";
+
 import {
   Moon,
   Sun,
