@@ -2,9 +2,11 @@ import React, { useState, useRef, useEffect } from "react";
 import toast from "react-hot-toast";
 import ACTIONS from "../Actions";
 import Editor from "../comp/Editor";
+import CodeChangeLog from "../comp/CodeChangeLog";
 import Client from "../comp/Client";
 import { initSocket } from "../socket";
 import logo from "../assets/code-logo.png";
+import axios from "axios";
 import {
   Moon,
   Sun,
@@ -18,6 +20,8 @@ import {
   Layout,
   Download,
   Play,
+  History,
+  LogOut,
 } from "lucide-react";
 import {
   useLocation,
@@ -44,7 +48,35 @@ const IconButton = ({ icon: Icon, onClick, className }) => (
     <Icon className="w-5 h-5" />
   </button>
 );
-
+//-----------------------------------------------------------------------------------------------
+const LogWindow = ({ logs, onClose }) => (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+    <div className="bg-white text-black p-4 rounded-md w-96">
+      <h2 className="text-lg font-bold mb-4">Change Logs</h2>
+      <div className="max-h-64 overflow-y-auto">
+        {logs.length ? (
+          logs.map((log, index) => (
+            <div key={index} className="mb-2">
+              <p className="text-sm">
+                <strong>{log.username}</strong> made changes at{" "}
+                {new Date(log.timestamp).toLocaleTimeString()}
+              </p>
+              <pre className="bg-gray-100 p-2 rounded">{log.code}</pre>
+            </div>
+          ))
+        ) : (
+          <p className="text-gray-500">No logs yet.</p>
+        )}
+      </div>
+      <button
+        onClick={onClose}
+        className="mt-4 bg-red-600 text-white px-4 py-2 rounded-md"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+);
 
 export default function EditorPage() {
   const [isDarkMode, setIsDarkMode] = useState(true);
@@ -55,6 +87,8 @@ export default function EditorPage() {
   const reactNavigator = useNavigate();
   const [clients, setClients] = useState([]);
   const [output, setOutput] = useState("");
+  const [logs, setLogs] = useState([]);
+  const [showLogs, setShowLogs] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState(
     location.state?.language || "javascript"
   );
@@ -106,6 +140,11 @@ export default function EditorPage() {
           username: location.state?.username,
         });
 
+        socketRef.current.on(ACTIONS.SYNC_CODE, ({ code, username }) => {
+          console.log("Code synced:", code, "by", username);
+          logChange(code, username || "Anonymous");
+        });
+
         socketRef.current.on(
           ACTIONS.JOINED,
           ({ clients, username, socketId }) => {
@@ -143,6 +182,8 @@ export default function EditorPage() {
       }
     };
   }, [location.state?.username, reactNavigator, roomId]);
+
+  const toggleLogs = () => setShowLogs(!showLogs);
 
   async function copyRoomId() {
     try {
@@ -187,14 +228,21 @@ export default function EditorPage() {
   };
 
   // Function to clear the editor content
-const clearEditorContent = () => {
-  codeRef.current = ""; // Clear the reference value
-  socketRef.current.emit(ACTIONS.SYNC_CODE, {
-    code: "",
-    socketId: socketRef.current.id,
-  }); // Notify other clients in the room
-  toast.success("Editor content cleared");
-};
+  const clearEditorContent = () => {
+    codeRef.current = ""; // Clear the reference value
+    socketRef.current.emit(ACTIONS.SYNC_CODE, {
+      code: "",
+      socketId: socketRef.current.id,
+    }); // Notify other clients in the room
+    toast.success("Editor content cleared");
+  };
+
+  const logChange = (code, username) => {
+    setLogs((prevLogs) => [
+      ...prevLogs,
+      { code, username, timestamp: Date.now() },
+    ]);
+  };
 
   const saveCode = async () => {
     const code = codeRef.current;
@@ -266,7 +314,7 @@ const clearEditorContent = () => {
               className="text-gray-300 hover:text-white hover:bg-gray-700"
             />
             <IconButton
-              icon={Github}
+              icon={LogOut}
               className="text-gray-300 hover:text-white hover:bg-gray-700"
               onClick={leaveRoom}
             />
@@ -283,7 +331,7 @@ const clearEditorContent = () => {
               <h2 className="text-sm font-semibold mb-2 text-gray-400">
                 Active Coders
               </h2>
-              <div className="clientsList">
+              <div className="clientsList mb-2">
                 {clients.map((client) => (
                   <Client key={client.socketId} username={client.username} />
                 ))}
@@ -326,6 +374,7 @@ const clearEditorContent = () => {
                 className="text-gray-300 hover:text-white hover:bg-gray-700"
                 onClick={clearEditorContent}
               />
+              
             </div>
           </div>
           <Editor
@@ -337,26 +386,29 @@ const clearEditorContent = () => {
           />
         </div>
 
+        {/* Code Change Logs Modal */}
+        {showLogs && <CodeChangeLog logs={logs} onClose={toggleLogs} />}
+
         {/* Output Panel */}
         <div className="w-96 flex flex-col border-l border-gray-800">
           <div className="p-4 border-b border-gray-800">
             <div className="flex justify-between items-center mb-4">
               <h2 className="font-semibold">Output:</h2>
               <div className="flex items-center space-x-2">
-              <select
-              className="bg-gray-900 text-white border border-gray-700 rounded-md px-1 py-1"
-              value={selectedLanguage}
-              onChange={(e) => setSelectedLanguage(e.target.value)}
-            >
-              <option value="" disabled>
-                Select Language
-              </option>
-              {Object.entries(LANGUAGE_VERSIONS).map(([lang, version]) => (
-                <option key={lang} value={lang}>
-                  {`${lang} (${version})`}
-                </option>
-              ))}
-            </select>
+                <select
+                  className="bg-gray-900 text-white border border-gray-700 rounded-md px-1 py-1"
+                  value={selectedLanguage}
+                  onChange={(e) => setSelectedLanguage(e.target.value)}
+                >
+                  <option value="" disabled>
+                    Select Language
+                  </option>
+                  {Object.entries(LANGUAGE_VERSIONS).map(([lang, version]) => (
+                    <option key={lang} value={lang}>
+                      {`${lang} (${version})`}
+                    </option>
+                  ))}
+                </select>
 
                 <Button
                   className="bg-green-600 hover:bg-green-700 text-white"
@@ -375,21 +427,32 @@ const clearEditorContent = () => {
                 <Play className="inline-block w-4 h-4 mr-2" />
                 Run Code
               </Button>
-             
+
+              <div className="flex items-center space-x-4">
+                <Button
+                  onClick={toggleLogs}
+                  className="text-gray-300 hover:text-white"
+                >
+                  <History className="inline-block w-4 h-4 mr-2" />
+                  View Logs
+                </Button>
+              </div>
             </div>
           </div>
           <div className="flex-1 p-4 overflow-auto">
             {isRunning ? (
-            <div className="spinner"></div>
-          ) : (
-            <pre className="font-mono text-sm text-gray-300">{output || 'No output yet'}</pre>
-          )}
+              <div className="spinner"></div>
+            ) : (
+              <pre className="font-mono text-sm text-gray-300">
+                {output || "No output yet"}
+              </pre>
+            )}
           </div>
           <div className="p-4 border-t border-gray-800">
             <h3 className="text-sm font-semibold mb-2 text-gray-400">
               Custom Input:
             </h3>
-            <textarea 
+            <textarea
               className="w-full resize-none bg-gray-900 text-white border border-gray-700 rounded-md p-4 h-20 text-sm"
               value={input}
               onChange={(e) => setInput(e.target.value)}
