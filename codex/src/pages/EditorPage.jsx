@@ -1,5 +1,8 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable react/prop-types */
 import React, { useState, useRef, useEffect } from "react";
 import toast from "react-hot-toast";
+import axios from "axios";
 import ACTIONS from "../Actions";
 import Editor from "../comp/Editor";
 import Client from "../comp/Client";
@@ -111,7 +114,6 @@ export default function EditorPage() {
           ({ clients, username, socketId }) => {
             if (username !== location.state?.username) {
               toast.success(`${username} joined the room.`);
-              console.log(`${username} joined`);
             }
             setClients(clients);
             socketRef.current.emit(ACTIONS.SYNC_CODE, {
@@ -196,6 +198,8 @@ const clearEditorContent = () => {
   toast.success("Editor content cleared");
 };
 
+
+//save code function
   const saveCode = async () => {
     const code = codeRef.current;
     if (!code) {
@@ -205,19 +209,21 @@ const clearEditorContent = () => {
 
     try {
       const token = localStorage.getItem("token");
+      
       const response = await axios.post(
         "http://localhost:5100/save-code",
         {
           roomId,
-          code,
+          code
         },
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
           },
         }
       );
-      toast.success(response.data.message || "Code saved successfully!");
+      toast.success(response.data.message || "Code saved successfully! For room : ", roomId);
     } catch (error) {
       toast.error("Failed to save code");
       console.error("Save code error:", error);
@@ -284,10 +290,16 @@ const clearEditorContent = () => {
                 Active Coders
               </h2>
               <div className="clientsList">
-                {clients.map((client) => (
-                  <Client key={client.socketId} username={client.username} />
-                ))}
-              </div>
+          {clients
+            .filter(
+              (client, index, self) =>
+                index ===
+                self.findIndex((c) => c.socketId === client.socketId)
+            )
+            .map((client) => (
+              <Client key={client.socketId} username={client.username} />
+            ))}
+        </div>
             </div>
             <Button
               className="w-full bg-gray-800 hover:bg-gray-700 text-white"
