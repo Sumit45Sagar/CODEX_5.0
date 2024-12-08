@@ -7,6 +7,10 @@ import CodeChangeLog from "../comp/CodeChangeLog";
 import Client from "../comp/Client";
 import { initSocket } from "../socket";
 import logo from "../assets/code-logo.png";
+
+
+
+
 import {
   Moon,
   Sun,
@@ -47,7 +51,6 @@ const IconButton = ({ icon: Icon, onClick, className }) => (
     <Icon className="w-5 h-5" />
   </button>
 );
-
 
 export default function EditorPage() {
   const [isDarkMode, setIsDarkMode] = useState(true);
@@ -143,6 +146,7 @@ export default function EditorPage() {
     };
 
     init();
+    getPreviousCode();
 
     return () => {
       if (socketRef.current) {
@@ -214,8 +218,7 @@ export default function EditorPage() {
     ]);
   };
 
-
-//save code function
+  //save code function
   const saveCode = async () => {
     const code = codeRef.current;
     if (!code) {
@@ -225,24 +228,56 @@ export default function EditorPage() {
 
     try {
       const token = localStorage.getItem("token");
-      
+
       const response = await axios.post(
         "http://localhost:5100/save-code",
         {
           roomId,
-          code
+          code,
         },
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
+            Authorization: `Bearer ${token}`,
           },
         }
       );
-      toast.success(response.data.message || "Code saved successfully! For room : ", roomId);
+      toast.success(
+        response.data.message || "Code saved successfully! For room : ",
+        roomId
+      );
     } catch (error) {
       toast.error("Failed to save code");
       console.error("Save code error:", error);
+    }
+  };
+
+  // get-previous-code from mongoDB
+  const getPreviousCode = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `http://localhost:5100/get-code/${roomId}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (response.data.code) {
+        codeRef.current = response.data.code;
+        socketRef.current.emit(ACTIONS.SYNC_CODE, {
+          code: response.data.code,
+          socketId: socketRef.current.id,
+        });
+        toast.success("Code loaded successfully");
+      } else {
+        toast.error("No code found for this room");
+      }
+    } catch (error) {
+      toast.error("Failed to get code");
+      console.error("Get code error:", error);
     }
   };
 
@@ -306,16 +341,16 @@ export default function EditorPage() {
                 Active Coders
               </h2>
               <div className="clientsList">
-          {clients
-            .filter(
-              (client, index, self) =>
-                index ===
-                self.findIndex((c) => c.socketId === client.socketId)
-            )
-            .map((client) => (
-              <Client key={client.socketId} username={client.username} />
-            ))}
-        </div>
+                {clients
+                  .filter(
+                    (client, index, self) =>
+                      index ===
+                      self.findIndex((c) => c.socketId === client.socketId)
+                  )
+                  .map((client) => (
+                    <Client key={client.socketId} username={client.username} />
+                  ))}
+              </div>
             </div>
             <Button
               className="w-full bg-gray-800 hover:bg-gray-700 text-white"
@@ -354,9 +389,9 @@ export default function EditorPage() {
                 className="text-gray-300 hover:text-white hover:bg-gray-700"
                 onClick={clearEditorContent}
               />
-              
             </div>
           </div>
+
           <Editor
             socketRef={socketRef}
             roomId={roomId}
@@ -364,6 +399,7 @@ export default function EditorPage() {
               codeRef.current = code;
             }}
           />
+
         </div>
 
         {/* Code Change Logs Modal */}

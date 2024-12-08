@@ -45,10 +45,10 @@ app.use(express.json());
 
 // i viv is correcting the path now 
 
-app.use(express.static(path.join(__dirname, '../client/build')));
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
-});
+// app.use(express.static(path.join(__dirname, '../client/build')));
+// app.get('*', (req, res) => {
+//     res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
+// });
 
 
 
@@ -59,10 +59,10 @@ app.use('/', createRoomRoute);
 app.use('/', saveCodeRoute);
 app.use('/', fetchRoomsRoute);
 
-app.use(express.static('build'));
-app.use((req, res, next) => {
-    res.sendFile(path.join(__dirname, 'build', 'index.html'));
-});
+// app.use(express.static('build'));
+// app.use((req, res, next) => {
+//     res.sendFile(path.join(__dirname, 'build', 'index.html'));
+// });
 
 const userSocketMap = {};
 function getAllConnectedClients(roomId) {
