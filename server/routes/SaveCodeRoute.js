@@ -40,7 +40,7 @@ const verifyToken = require('../middleware/auth'); // Ensure auth middleware is 
 
 saveCodeRoute.post('/save-code', verifyToken, async (req, res) => {
     const { roomId, code } = req.body;
-    const userId = req.user.id; // Retrieved from the verified token
+    // const userId = req.user._id; // Retrieved from the verified token
 
     // Validate required fields
     if (!roomId || !code) {
@@ -53,7 +53,7 @@ saveCodeRoute.post('/save-code', verifyToken, async (req, res) => {
 
         // If no room found, create a new one
         if (!room) {
-            room = new Room({ roomId, code });
+            room = await Room.create({ roomId, code});
         } else {
             // Update the code if the room exists
             room.code = code;

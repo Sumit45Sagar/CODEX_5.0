@@ -27,12 +27,14 @@ const io = new Server(server);
 const port = process.env.PORT || 3100;
 
 app.use(cookie());
-app.use(cors({
-    origin: 'http://localhost:3000',
-    credentials: true,
-    allowedHeaders: ['Authorization', 'Content-Type'],
-    methods: ['GET', 'POST', 'PUT']
-}));
+app.use(
+    cors({
+        origin: "http://localhost:5173", // Replace with your frontend origin
+        methods: ["GET", "POST", "PUT", "DELETE"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+    })
+);
+
 
 // app.options('/save-code', cors()); // Handle preflight requests for /save-code
 
