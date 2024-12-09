@@ -273,7 +273,8 @@ export default function EditorPage() {
         });
         toast.success("Code loaded successfully");
       } else {
-        toast.error("No code found for this room");
+        // toast.error("No code found for this room");
+        console.log("No code found for this room");
       }
     } catch (error) {
       toast.error("Failed to get code");
@@ -356,8 +357,8 @@ export default function EditorPage() {
               className="w-full bg-gray-800 hover:bg-gray-700 text-white"
               onClick={() => {}}
             >
-              <Users className="inline-block w-4 h-4 mr-2" />
-              Invite Collaborators
+              {/* <Users className="inline-block w-4 h-4 mr-2" /> */}
+              Previous Collaborations
             </Button>
             <Button
               className="w-full bg-gray-800 hover:bg-gray-700 text-white"

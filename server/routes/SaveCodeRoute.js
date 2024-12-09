@@ -97,8 +97,8 @@ saveCodeRoute.get('/get-code/:roomId', verifyToken,async (req, res) => {
     }
 });
 
-saveCodeRoute.get('/', (req, res) => {
-    res.send('Save code route');
-});
+// saveCodeRoute.get('/', (req, res) => {
+//     res.send('Save code route');
+// });
 
 module.exports = saveCodeRoute;

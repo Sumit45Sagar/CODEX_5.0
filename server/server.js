@@ -29,7 +29,7 @@ const port = process.env.PORT || 3100;
 app.use(cookie());
 app.use(
     cors({
-        origin: "http://localhost:5173", // Replace with your frontend origin
+        origin: "http://13.211.228.124", // Replace with your frontend origin
         methods: ["GET", "POST", "PUT", "DELETE"],
         allowedHeaders: ["Content-Type", "Authorization"],
     })
