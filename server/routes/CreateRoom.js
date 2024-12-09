@@ -2,7 +2,7 @@ const express = require('express');
 const createRoomRoute = express.Router();
 const verifyToken = require('../middleware/auth')
 const Room = require('../model/Room')
-
+const uuidV4 =require('uuid')
 createRoomRoute.post('/create-room', verifyToken, async(req, res) => {
     const roomId = await uuidV4();
     const {userId, roomName} = req.body; 

@@ -29,6 +29,7 @@ import {
   useParams,
 } from "react-router-dom";
 import { executeCode } from "../api";
+import { get } from "../../../server/routes/CreateRoom";
 
 const Button = ({ children, onClick, className }) => (
   <button
@@ -135,7 +136,8 @@ export default function EditorPage() {
       }
     };
 
-    init();
+init();
+
 
     return () => {
       if (socketRef.current) {
@@ -145,6 +147,7 @@ export default function EditorPage() {
       }
     };
   }, [location.state?.username, reactNavigator, roomId]);
+
 
   async function copyRoomId() {
     try {
@@ -211,7 +214,7 @@ const clearEditorContent = () => {
       const token = localStorage.getItem("token");
       
       const response = await axios.post(
-        "http://localhost:5100/save-code",
+        "http://localhost:3000/save-code",
         {
           roomId,
           code
@@ -227,6 +230,36 @@ const clearEditorContent = () => {
     } catch (error) {
       toast.error("Failed to save code");
       console.error("Save code error:", error);
+    }
+  };
+
+  // get-previous-code from mongoDB
+  const getPreviousCode = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `http://localhost:3000/get-code/${roomId}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (response.data.code) {
+        codeRef.current = response.data.code;
+        socketRef.current.emit(ACTIONS.SYNC_CODE, {
+          code: response.data.code,
+          socketId: socketRef.current.id,
+        });
+        toast.success("Code loaded successfully");
+      } else {
+        // toast.error("No code found for this room");
+        console.log("No code found for this room");
+      }
+    } catch (error) {
+      toast.error("Failed to get code");
+      console.error("Get code error:", error);
     }
   };
 
